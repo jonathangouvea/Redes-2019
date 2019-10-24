@@ -57,8 +57,7 @@ class Conexao:
         
         self.recebidos = []
         
-        self.timer = asyncio.get_event_loop().call_later(self.timeout, self._retransmitir)
-        self.timer.cancel()
+        self.timer = None
         
     def _retransmitir(self):
         self.servidor.rede.enviar(self.recebidos[0], self.id_conexao[0])
@@ -79,10 +78,10 @@ class Conexao:
                 self.recebidos = self.recebidos[ack_no-self.send_base:]
                 self.send_base = ack_no
                 if len(self.recebidos) > 0:
-                    if self.timer.cancelled():
+                    if not self.timer:
                         self.timer = asyncio.get_event_loop().call_later(self.timeout, self._retransmitir)
                 else:
-                    self.timer.cancel()
+                    self.timer = None
         
             #self.seq_no = seq_no
             self.ack_no += len(payload)
@@ -120,7 +119,7 @@ class Conexao:
             self.fix_header(self.seq_no - MSS + 1, self.ack_no, flags=flags, dados = dados[i*MSS:(i+1)*MSS])
             self.recebidos.append(self.simple_header(self.seq_no - MSS + 1, self.ack_no, flags = flags, dados = dados[i*MSS:(i+1)*MSS]))
             
-            if self.timer.cancelled():
+            if not self.timer:
                 self.timer = asyncio.get_event_loop().call_later(self.timeout, self._retransmitir)
 
     def fechar(self):

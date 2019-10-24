@@ -90,6 +90,7 @@ def main():
 
     yield from asyncio.sleep(1.5)
 
+    print("### TAM_FILA {0}".format(len(rede.fila)))
     while len(rede.fila) > 0:
         segmento, _ = rede.fila.pop(0)
         _, _, seq, ack, flags, _, _, _ = read_header(segmento)
@@ -97,12 +98,13 @@ def main():
         assert seq == ack_no
         assert (flags & FLAGS_ACK) == FLAGS_ACK and ack == seq_no
         assert segmento[4*(flags>>12):] == payload[:MSS]
+        print("### TAM_FILA {0}".format(len(rede.fila)))
 
     ack_no += MSS
     rede.callback(src_addr, dst_addr, fix_checksum(make_header(src_port, dst_port, seq_no, ack_no, FLAGS_ACK), src_addr, dst_addr))
-
+    print("### TAM_FILA {0}".format(len(rede.fila)))
     yield from asyncio.sleep(1.5)
-
+    
     segmento, _ = rede.fila.pop(0)
     _, _, seq, ack, flags, _, _, _ = read_header(segmento)
     # Agora deve vir o segundo segmento
