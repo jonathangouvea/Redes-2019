@@ -59,6 +59,7 @@ conexao.fechar()
 segmento, _ = rede.fila[0]
 _, _, seq, ack, flags, _, _, _ = read_header(segmento)
 assert (flags & FLAGS_FIN) == FLAGS_FIN
+#print("### LOCAL:\t SEQ {0} ACK {1}\t GLOBAL:\t SEQ_NO {2} ACK_NO {3}\t {4}".format(seq, ack, seq_no, ack_no, ack_no - seq))
 assert seq == ack_no
 if (flags & FLAGS_ACK) == FLAGS_ACK:
     assert ack == seq_no
