@@ -90,7 +90,6 @@ class Conexao:
         #print(">>> LOCAL:\t SEQ_NO {0} ACK_NO {1} LEN_RECEBIDOS {5}\t GLOBAL:\t SEQ_NO {2} ACK_NO {3} SEND_BASE {4}".format(seq_no, ack_no, self.seq_no, self.ack_no, self.send_base, len(self.recebidos)))
     
         if seq_no == self.ack_no:
-            self.janela += 1
         
             if self.tempoEnvio > 0:
                 if self.timer:
@@ -134,6 +133,7 @@ class Conexao:
                     self.ack_no = self.ack_no + 1
                     self.fix_header(self.seq_no, self.ack_no, flags = FLAGS_ACK|FLAGS_FIN)
             else:
+                self.janela += 1
                 self.fix_header(self.seq_no, self.ack_no, flags = FLAGS_ACK)
             
             self.callback(self, payload)
