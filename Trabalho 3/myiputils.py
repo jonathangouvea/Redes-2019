@@ -23,9 +23,11 @@ def read_ipv4_header(datagram, verify_checksum=False):
     src_addr = addr2str(datagram[12:16])
     dst_addr = addr2str(datagram[16:20])
     if verify_checksum:
-        print("CHECKSUM {0} -> 0".format(calc_checksum(datagram[:4*ihl])))
+        #print("CHECKSUM {0} -> 0".format(calc_checksum(datagram[:4*ihl])))
         assert calc_checksum(datagram[:4*ihl]) == 0
     payload = datagram[4*ihl:total_len]
 
     return dscp, ecn, identification, flags, frag_offset, ttl, proto, \
            src_addr, dst_addr, payload
+           
+

@@ -1,6 +1,13 @@
 from myiputils import *
+import struct
+import mytcputils
 
 
+def create_ipv4_header(vihl, dscpecn, identification, flagsfrag, ttl, proto, checksum, src_addr, dest_addr):
+    datagram = struct.pack('!BBHHHBBHII', vihl, dscpecn, total_len, identification, flagsfrag, ttl, proto, checksum, src_addr, dest_addr)
+    return datagram
+    
+    
 class CamadaRede:
     def __init__(self, enlace):
         """
@@ -68,6 +75,7 @@ class CamadaRede:
                 print(" "*(calculo[len(calculo) - i - 1]) + "^")
                 
                 if val_matchs[len(calculo) - i - 1] > val:
+                    print("--- MATCH NONE")
                     return None
                 
                 #if dest_str[calculo[len(calculo) - i - 1]] == '1':
@@ -128,17 +136,17 @@ class CamadaRede:
         
         
         next_hop = self._next_hop(dest_addr)        
-        print("DEST_ADDR {0} NEXT_HOP {1}".format(dest_addr, next_hop))
+        print("DEST_ADDR {0} NEXT_HOP {1} MEU_END {2}".format(dest_addr, next_hop, self.meu_endereco))
         
         dest = dest_addr.split('.')
         destino = [int(dest[0]), int(dest[1]), int(dest[2]), int(dest[3])]
         val = destino[3] << 24
         val += destino[2] << 16
         val += destino[1] << 8
-        val += destino[0] << 0      
-          
+        val += destino[0] << 0     
         val_dst = val
-        data_dst_addr = (val).to_bytes(4, 'little')
+        
+        val_dst = mytcputils.str2addr(dest_addr)
         
         dest = self.meu_endereco.split('.')
         destino = [int(dest[0]), int(dest[1]), int(dest[2]), int(dest[3])]
@@ -146,38 +154,16 @@ class CamadaRede:
         val += destino[2] << 16
         val += destino[1] << 8
         val += destino[0] << 0
+        val_src = val
         
-        data_src_addr = (val).to_bytes(4, 'little')
+        val_src = mytcputils.str2addr(self.meu_endereco)
         
         version = 4
         ihl = 5
-        data_version_verihl = ((version << 4) + ihl).to_bytes(1, 'little')
-        
-        data_total_len = (len(segmento) + 20).to_bytes(2, 'little')
-        
-        data_identification = (0).to_bytes(2, 'little')
-        
-        datagrama = \
-            data_version_verihl + \
-            (0).to_bytes(1, 'little') + \
-            data_total_len + \
-            data_identification + \
-            (0).to_bytes(2, 'little') + \
-            (64).to_bytes(1, 'little') + \
-            (6).to_bytes(1, 'little')
-        
-        data_checksum = calc_checksum(datagrama + \
-            data_src_addr + \
-            data_dst_addr)
-        print("Versão original {0}".format(data_checksum))
-        
-        data_header_checksum = data_checksum.to_bytes(2, 'little')
-        
-        datagrama = datagrama + \
-            data_header_checksum + \
-            data_src_addr + \
-            data_dst_addr + \
-            segmento
+            
+        datagrama = struct.pack('!BBHHHBBH', (version << 4) + ihl, 0, len(segmento) + 20, 0, 0, 64, 6, 0) + val_src + val_dst
+        data_checksum = mytcputils.calc_checksum(datagrama)
+        datagrama = struct.pack('!BBHHHBBH', (version << 4) + ihl, 0, len(segmento) + 20, 0, 0, 64, 6, data_checksum) + val_src + val_dst + segmento
             
         #datagrama = ((4 << 4) + 5).to_bytes(1, 'little') + (0).to_bytes(7, 'little') + (64).to_bytes(1, 'little') + (0).to_bytes(7, 'little')  + datagrama
         # TODO: Assumindo que a camada superior é o protocolo TCP, monte o
